@@ -172,25 +172,26 @@ require([
     if (document.getElementById("ckmeans").checked == true) {
       console.log("using ck means CK Means ");
       output = ss.ckmeans(ckMeansData, 5);
+      //console.log(output);
       stp1 = 0;
-      stp2 = output[0][output[0].length - 1];
-      stp3 = output[1][output[1].length - 1];
-      stp4 = output[2][output[2].length - 1];
-      stp5 = output[3][output[3].length - 1];
-      top = output[4][output[4].length - 1];
+      stp2 = output[1][0];
+      stp3 = output[2][0];
+      stp4 = output[3][0];
+      stp5 = output[4][0];
+      top = output[4][output[4].length-1];
     }
 
     $("#one_b").val(parseInt(stp1));
-    $("#two_b").val(parseInt(stp2 + 1));
-    $("#three_b").val(parseInt(stp3 + 1));
-    $("#four_b").val(parseInt(stp4 + 1));
-    $("#five_b").val(parseInt(stp5 + 1));
+    $("#two_b").val(parseInt(stp2));
+    $("#three_b").val(parseInt(stp3));
+    $("#four_b").val(parseInt(stp4));
+    $("#five_b").val(parseInt(stp5));
 
-    $("#one_a").html(parseInt(stp1));
-    $("#two_a").html(parseInt(stp2));
-    $("#three_a").html(parseInt(stp3));
-    $("#four_a").html(parseInt(stp4));
-    $("#five_a").val(parseInt(stp5));
+    $("#one_a").html(parseInt(stp2-1));
+    $("#two_a").html(parseInt(stp3-1));
+    $("#three_a").html(parseInt(stp4-1));
+    $("#four_a").html(parseInt(stp5-1));
+    $("#five_a").val(parseInt(top));
 
     l_id = map.graphicsLayerIds[0];
 
