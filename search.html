@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+  <title>Class Breaks Renderer</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/3.21/esri/css/esri.css">
+  <style>
+    html,
+    body,
+    #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+  <script src="https://js.arcgis.com/3.21/"></script>
+  <script>
+    var map;
+
+    require([
+    "dojo/on",
+    "esri/map",
+    "esri/config",
+    "esri/layers/FeatureLayer",
+    
+    
+    "esri/tasks/QueryTask",
+    "esri/tasks/query",   
+    "esri/Color",
+    "esri/symbols/SimpleLineSymbol",
+    "esri/symbols/SimpleFillSymbol",
+    "esri/geometry/webMercatorUtils",   
+    "dojo/dom-style", "dojo/domReady!"
+    ], function (
+      on,
+      Map,
+      esriConfig,
+      FeatureLayer,     
+      QueryTask,
+      Query,
+      Color,
+      SimpleLineSymbol,
+      SimpleFillSymbol,    
+      
+      webMercatorUtils, 
+      domStyle
+    ) {
+
+      var  map = new Map("map", {
+          basemap: "streets",
+          center: [133.25, -24.15],
+          zoom: 4
+        });
+//https://geo.abs.gov.au/arcgis/rest/services/ASGS2016/STATE/MapServer/0
+     //"STATE_CODE_2016":
+        var featureLayer = new FeatureLayer("https://geo.abs.gov.au/arcgis/rest/services/ASGS2016/STATE/MapServer/1", {
+                
+        outFields: ["*"],
+        });
+
+        featureLayer.on('load', function(){
+          map.addLayer(featureLayer);
+
+
+
+        });
+    
+        
+        on(map, 'update-end', function(){
+
+
+            console.log("fire");
+            console.log(featureLayer.graphics.length);
+
+
+            for(var i = 0; i < featureLayer.graphics.length;  i++){
+             
+              if(featureLayer.graphics[i].attributes['STATE_CODE_2016'] === "4"){
+
+                  var geo = featureLayer.graphics[i];
+                  console.log(geo);
+                  query(geo);
+                  break;
+
+
+              }}
+
+        });
+
+        function query(graphic){
+          var queryTaskTouches = new QueryTask(featureLayer.url);
+          var query = new Query();
+          esriConfig.defaults.io.proxyUrl = "/proxy/";
+          esriConfig.defaults.io.alwaysUseProxy = false;
+          query.returnGeometry = true;
+          query.outFields = ["*"];
+          query.outSpatialReference = {
+            "wkid": 102100
+          };          
+          
+          var symbol = new SimpleFillSymbol(SimpleFillSymbol.STYLE_SOLID, new SimpleLineSymbol(SimpleFillSymbol.STYLE_SOLID, new Color([100, 100, 100]), 3), new Color([255, 0, 0, 0.20]));
+          graphic.setSymbol(symbol);
+          map.graphics.add(graphic);
+
+          query.geometry = webMercatorUtils.webMercatorToGeographic(graphic.geometry);
+          query.spatialRelationship = Query.SPATIAL_REL_OVERLAPS;
+          //query.units = "meters"
+          //query.distance = 100;
+          queryTaskTouches.executeForIds(query);
+
+          on(queryTaskTouches, 'execute-for-ids-complete', function(e){
+
+            console.log(e);
+            //console.log(e.featureSet.features);
+            console.log(featureLayer.graphics.length);
+            console.log(featureLayer);
+            for(var i = 0; i < featureLayer.graphics.length;  i++){
+              for(var j = 0; j < e.objectIds.length; j++){
+               // console.log(featureLayer.graphics[i]);
+                  if(featureLayer.graphics[i].attributes['OBJECTID'] === e.objectIds[j]){
+                    console.log(featureLayer.graphics[i].attributes['STATE_CODE_2016']);
+                      console.log(featureLayer.graphics[i].attributes['STATE_NAME_2016']);
+
+                      //biscuit request here.
+
+
+                  }
+              }             
+
+            }
+          });
+        }
+
+
+      });
+  </script>
+
+
+</head>
+
+<body>
+  <script>
+   
+  </script>
+  <div id="map"></div>
+</body>
+
+</html>
