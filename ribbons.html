@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+
+  <meta name="viewport" content="initial-scale=1, maximum-scale=1,user-scalable=no">
+  <title>Class Breaks Renderer</title>
+
+  <link rel="stylesheet" href="https://js.arcgis.com/3.21/esri/css/esri.css">
+  <style>
+    html,
+    body,
+    #map {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    }
+  </style>
+  <script src="https://js.arcgis.com/3.21/"></script>
+  <script>
+    var map;
+
+  var data = {
+    "measureName": "measure",
+    "measureShortCode":"",
+    "measureGroup":"",
+    "min":10,
+    "max":90,
+    "evenBreaks": [18,36,54,72,90],
+    "jenks": [18,20,50,60,80],
+    "data": {"1":"10","2":"20","3":"30","4":"40","5":"50","6":"60","7":"70","8":"80","9":"90"} 
+}
+
+
+
+    require([
+    "dojo/on",
+    "esri/map",
+    "esri/layers/FeatureLayer",
+    
+    
+   
+    "esri/Color",
+    "esri/symbols/SimpleLineSymbol",
+    "esri/symbols/SimpleFillSymbol",
+    "esri/renderers/ClassBreaksRenderer",
+
+
+    "dojo/dom-style", "dojo/domReady!"
+    ], function (
+      on,
+      Map,
+      
+      FeatureLayer,     
+     
+      Color,
+      SimpleLineSymbol,
+      SimpleFillSymbol,    
+       ClassBreaksRenderer,
+
+      domStyle
+    ) {
+
+      var  map = new Map("map", {
+          basemap: "streets",
+          center: [133.25, -24.15],
+          zoom: 4
+      });
+
+      function findValue(graphic){
+        //console.log(graphic);
+
+        var code = graphic.attributes['STATE_CODE_2016'];        
+        let rtn =  parseFloat(data.data[code]);
+
+        //console.log(rtn);
+        
+        if(rtn == undefined){
+          rtn = -1;
+        }
+        return rtn;
+
+      }
+
+      var line = new SimpleLineSymbol();
+      line.setWidth(1.5);
+      line.setStyle(SimpleLineSymbol.SOLID);
+      line.setColor(new Color([225, 0, 0, 0.4]));
+
+      var symbol = new SimpleFillSymbol();
+      symbol = symbol.setOutline(line);
+
+     //"STATE_CODE_2016":
+        var featureLayer = new FeatureLayer("https://geo.abs.gov.au/arcgis/rest/services/ASGS2016/STATE/MapServer/0", {
+          
+        outFields: ["*"],
+        });
+
+        featureLayer.on('load', function(){
+        map.addLayer(featureLayer);
+
+        });
+
+      var signal = on(featureLayer, 'update-end', function(){
+
+        var renderer = new ClassBreaksRenderer(symbol, findValue);
+        console.log("adding renderer.")
+        renderer.addBreak(0, data.evenBreaks[0], new SimpleFillSymbol().setColor(new Color([56, 168, 0, 0.5])));
+        renderer.addBreak(data.evenBreaks[0]-1, data.evenBreaks[1], new SimpleFillSymbol().setColor(new Color([139, 209, 0, 0.5])));
+        renderer.addBreak(data.evenBreaks[1]-1, data.evenBreaks[2], new SimpleFillSymbol().setColor(new Color([255, 255, 0, 0.5])));
+        renderer.addBreak(data.evenBreaks[2]-1, data.evenBreaks[3], new SimpleFillSymbol().setColor(new Color([255, 128, 0, 0.5])));
+        renderer.addBreak(data.evenBreaks[3]-1, data.max, new SimpleFillSymbol().setColor(new Color([255, 0, 0, 0.5])));
+
+        featureLayer.setRenderer(renderer);
+        map.addLayer(featureLayer);
+
+        featureLayer.redraw();
+        
+        dojo.disconnect(signal);
+
+
+      });
+              
+      on(map, 'update-end', function(){
+        for(var i = 0; i < featureLayer.graphics.length;  i++){
+          //console.log(featureLayer.graphics[i].attributes['STATE_CODE_2016']);
+        }
+
+      });
+
+    
+
+
+
+    });
+
+
+  </script>
+
+
+</head>
+
+<body>
+  <script>
+   
+  </script>
+  <div id="map"></div>
+</body>
+
+</html>
